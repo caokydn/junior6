@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JUNI English - Speaking Practice</title>
+  <style>
+    body { font-family: 'Comic Sans MS', sans-serif; }
+
+    body {
+      font-family: 'Comic Sans MS', sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, #f9d976, #f39f86);
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      position: relative;
+    }
+    h1 {
+      color: #fff;
+      text-shadow: 2px 2px 4px #000;
+      font-size: 1.5em;
+      margin-top: 20px;
+    }
+    #welcomeScreen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #a5f3fc, #fbbfbc, #fde68a);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      color: #0f172a;
+      font-size: 28px;
+      text-align: center;
+      overflow: hidden;
+    }
+    #welcomeScreen h2 {
+      font-size: 2.5em;
+      color: #f472b6;
+      margin-bottom: 20px;
+    }
+    #welcomeScreen input {
+      padding: 14px 28px;
+      font-size: 20px;
+      border: none;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      width: 280px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    #welcomeScreen button {
+      margin-top: 20px;
+      padding: 14px 28px;
+      font-size: 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+      color: #0f172a;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    #welcomeScreen button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    #speakingArea {
+      display: none;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    #question {
+      font-size: 2em;
+      background: rgba(255,255,255,0.7);
+      padding: 20px;
+      margin: 30px auto;
+      width: 80%;
+      border-radius: 20px;
+      color: #1e293b;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #controls button {
+      margin: 10px;
+      padding: 14px 28px;
+      font-size: 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+      color: #0f172a;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    #controls button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    #endScreen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(0.5px);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #endTitle {
+      font-size: 3em;
+      color: #f472b6;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    #endMessage {
+      font-size: 2.5em;
+      color: #34d399;
+      text-align: center;
+      margin-bottom: 20px;
+      word-wrap: break-word;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 1001;
+    }
+
+    @media (max-width: 600px) {
+      #question {
+        font-size: 1.4em;
+        width: 90%;
+      }
+      #controls button {
+        font-size: 18px;
+        padding: 12px 24px;
+      }
+    }
+
+/* Ảnh flashcard trong lúc thu âm (giống ảnh của game 2) */
+#question img {
+  object-fit: contain;
+  max-width: 90%;
+  max-height: 40vh;
+  border: 5px solid #ffcc00;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  margin: 12px auto;
+  display: block;
+}
+
+
+  </style>
+</head>
+<body>
+
+  <div id="welcomeScreen">
+    <h2>🎉 JUNI English chào mừng các em 🎉</h2>
+    <input type="text" id="studentName" placeholder="Nhập tên em...">
+    <button id="startBtn">Bắt đầu</button>
+  </div>
+
+  <div id="speakingArea">
+    <h1>🎉 JUNI English, 113 Lê Trọng Tấn, Đà Nẵng-0935.994359 🎉</h1>
+    <div id="question"></div>
+    <div id="controls"></div>
+  </div>
+
+  <div id="endScreen">
+    <div id="endTitle">🎉 JUNI English 🎉</div>
+    <div id="endMessage"></div>
+    <canvas id="balloonCanvas"></canvas>
+  </div>
+
+<script>
+// Đoạn văn có xuống dòng (sử dụng template literal để dễ đọc)
+// Danh sách ảnh flashcard (không cần phần mở rộng)
+const juniorword = ['doctor','fireman','ice cream','net','nurse','police','pool','pupil','seesaw','slide','swing','tree'];
+
+// Mỗi dòng trong juniorword là một phần tử của mảng speaking
+const speaking = [...juniorword]; // giữ nguyên danh sách ảnh
+speaking.push(""); // thêm phần tử trống để xử lý logic cuối
+
+
+let audioURL = null; // tạo URL dùng lại
+
+let countdownInterval;
+let sentenceTimeout;
+
+
+let sentenceTimes = []; // mảng lưu {start, end} từng câu
+let sentenceStart = 0;  // thời gian bắt đầu câu hiện tại
+let recordingStartTime = 0; // thời gian bắt đầu toàn bộ bài
+let mediaRecorder;
+let currentIndex = 0;
+let chunks = [];
+
+let audioBlob;
+let studentName = "";
+
+const welcomeScreen = document.getElementById("welcomeScreen");
+const startBtn = document.getElementById("startBtn");
+const studentNameInput = document.getElementById("studentName");
+const speakingArea = document.getElementById("speakingArea");
+const questionBox = document.getElementById("question");
+const controls = document.getElementById("controls");
+const endScreen = document.getElementById("endScreen");
+const endMessage = document.getElementById("endMessage");
+
+// --- Bắt đầu chương trình ---
+startBtn.onclick = () => {
+  studentName = studentNameInput.value.trim();
+  if (!studentName) {
+    alert("Vui lòng nhập tên trước khi bắt đầu!");
+    return;
+  }
+  welcomeScreen.style.display = "none";
+  speakingArea.style.display = "block";
+  controls.innerHTML = "";
+  addButton("Bắt đầu thu âm", startRecording);
+};
+
+function getMaxTime(sentence) {
+  const spaceCount = (sentence.match(/\s+/g) || []).length;
+  return 10000 + spaceCount * 1800; // 10 giây cơ bản + 1.8 giây mỗi từ
+}
+
+// --- Hiển thị câu và nút ---
+function showSentence() {
+  controls.innerHTML = "";
+
+  // Nếu chưa đến câu cuối
+  if (currentIndex < speaking.length - 1) {
+
+// Hiển thị hình ảnh thay vì văn bản
+const imgName = speaking[currentIndex];
+const img = new Image();
+
+
+img.alt = imgName;
+
+// Thử ảnh .jpg trước, nếu lỗi thì thử .png
+img.src = `flashcard/${imgName}.jpg`;
+img.onerror = () => { img.src = `flashcard/${imgName}.png`; };
+
+// Hiển thị trong questionBox
+questionBox.innerHTML = "";
+questionBox.appendChild(img);
+
+
+
+    addButton("Câu tiếp theo", nextSentence);
+
+
+// Thêm div countdown
+const countdownDiv = document.createElement("div");
+countdownDiv.id = "countdown";
+countdownDiv.style.color = "gray"; // chữ xám
+countdownDiv.style.marginTop = "5px";
+controls.appendChild(countdownDiv);
+
+// Tính thời gian tối đa
+const maxTime = getMaxTime(speaking[currentIndex]);
+let remaining = Math.ceil(maxTime / 1000);
+countdownDiv.textContent = `Thời gian còn lại: ${remaining}s`;
+
+// Cập nhật countdown mỗi giây
+countdownInterval = setInterval(() => {
+  remaining--;
+  if (remaining >= 0) countdownDiv.textContent = `Thời gian còn lại: ${remaining}s`;
+}, 1000);
+
+// Tự chuyển câu khi hết thời gian
+sentenceTimeout = setTimeout(() => {
+  nextSentence(true); // auto=true: tự chuyển
+}, maxTime);
+
+
+  } 
+  // Nếu là câu cuối
+  else {
+    // Dừng ghi âm trước khi hiển thị các nút cuối
+if (mediaRecorder && mediaRecorder.state !== "inactive") {
+  mediaRecorder.stop();
+
+const now = Date.now();
+sentenceTimes.push({
+  start: sentenceStart,
+  end: now - recordingStartTime
+});
+
+  mediaRecorder.onstop = () => {
+audioBlob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/mp4" });
+
+
+
+    questionBox.textContent = `🎉 Chúc mừng ${studentName} đã hoàn thành bài Speaking! 🎉`;
+    addButton("💾 Lưu file speaking.mp3 và nghe lại", saveAndReview);
+const buttons = controls.querySelectorAll("button");
+const lastBtn = buttons[buttons.length - 1];
+lastBtn.style.background = "linear-gradient(90deg, #f472b6, #ec4899)"; // vàng cam
+lastBtn.style.color = "#fff";
+  };
+} else {
+  questionBox.textContent = `🎉 Chúc mừng ${studentName} đã hoàn thành bài Speaking! 🎉`;
+  addButton("💾 Lưu file speaking.mp3 và nghe lại", saveAndReview);
+const buttons = controls.querySelectorAll("button");
+const lastBtn = buttons[buttons.length - 1];
+lastBtn.style.background = "linear-gradient(90deg, #f472b6, #ec4899)"; // vàng cam
+lastBtn.style.color = "#fff";
+}
+  }
+}
+
+
+
+
+function addButton(label, action) {
+  const btn = document.createElement("button");
+  btn.textContent = label;
+  btn.onclick = action;
+  controls.appendChild(btn);
+}
+
+async function startRecording() {
+  chunks = [];
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+// --- Xác định loại trình duyệt để chọn định dạng ghi âm ---
+let mimeType;
+const ua = navigator.userAgent.toLowerCase();
+
+if (ua.includes("safari") && !ua.includes("chrome")) {
+  // Safari hoặc iOS Safari → dùng mp4
+  mimeType = "audio/mp4";
+} else if (MediaRecorder.isTypeSupported("audio/webm")) {
+  // Chrome, Edge, Opera → dùng webm
+  mimeType = "audio/webm";
+} else {
+  mimeType = "audio/mp4"; // fallback an toàn
+}
+
+mediaRecorder = new MediaRecorder(stream, { mimeType });
+
+
+    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+    mediaRecorder.start();
+    
+    // --- Thêm 2 dòng này ---
+    recordingStartTime = Date.now(); // thời gian bắt đầu bài
+    sentenceStart = 0;               // thời gian bắt đầu câu đầu
+
+    currentIndex = 0;
+    showSentence();
+  } catch (err) {
+    alert("Không thể truy cập micro: " + err);
+  }
+}
+
+
+function nextSentence(auto=false) {
+  // Dừng countdown và timeout hiện tại
+  clearInterval(countdownInterval);
+  clearTimeout(sentenceTimeout);
+
+  // Lưu thời gian kết thúc câu nếu chưa lưu
+  if (!sentenceTimes[currentIndex]) {
+    const now = Date.now();
+    sentenceTimes.push({
+      start: sentenceStart,
+      end: now - recordingStartTime
+    });
+  }
+
+  // Cập nhật thời gian bắt đầu câu mới
+  sentenceStart = Date.now() - recordingStartTime;
+
+  currentIndex++;
+
+  showSentence();
+}
+
+
+
+
+
+
+function playRecording() {
+  const audioURL = URL.createObjectURL(audioBlob);
+  questionBox.innerHTML = `
+    <p>🔊 Đang phát lại:</p>
+    <audio id="replayAudio" controls autoplay style="width: 100%; margin-top: 10px;">
+<source src="${audioURL}" type="${audioBlob?.type || 'audio/mp4'}">
+
+      Trình duyệt của bạn không hỗ trợ phát âm thanh.
+    </audio>
+  `;
+  const audio = document.getElementById("replayAudio");
+  audio.play(); // tự động phát ngay sau khi bấm "Nghe lại"
+}
+
+
+// --- Lưu file ---
+function saveRecording() {
+  if (audioBlob) {
+    const a = document.createElement("a");
+    const url = URL.createObjectURL(audioBlob);
+    a.href = url;
+    a.download = "speaking.mp3";
+    a.click();
+  }
+}
+
+// === Lưu file + Hiển thị phần nghe lại từng câu ===
+function saveAndReview() {
+  // Ghép tất cả các đoạn ghi âm lại thành một file duy nhất
+const mergedBlob = audioBlob; // dùng 1 file duy nhất
+
+  // Lưu file speaking.mp3
+  const a = document.createElement("a");
+  const url = URL.createObjectURL(mergedBlob);
+  a.href = url;
+  a.download = "speaking.mp3";
+  a.click();
+
+  // Hiển thị khu vực nghe lại từng câu
+  showReviewList();
+}
+
+
+// === Giao diện nghe lại từng câu ===
+function showReviewList() {
+  speakingArea.style.display = "none";
+  endScreen.style.display = "flex";
+  endScreen.style.background = "linear-gradient(135deg, #f9d976, #f39f86)";
+
+  // === Tạo 2 nút ===
+  const playAllBtn = document.createElement("button");
+  playAllBtn.textContent = "▶️ Nghe lại toàn bộ bài speaking";
+  playAllBtn.style.marginTop = "10px";
+  playAllBtn.style.padding = "10px 20px";
+  playAllBtn.onclick = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+    currentAudio = new Audio(URL.createObjectURL(audioBlob));
+    currentAudio.play();
+  };
+
+  const downloadBtn = document.createElement("button");
+  downloadBtn.textContent = "💾 Tải file speaking.mp3";
+  downloadBtn.style.marginTop = "10px";
+  downloadBtn.style.padding = "10px 20px";
+  downloadBtn.style.border = "none";
+  downloadBtn.style.borderRadius = "10px";
+  downloadBtn.style.fontSize = "18px";
+  downloadBtn.style.background = "linear-gradient(90deg,#f59e0b,#fbbf24)";
+  downloadBtn.style.color = "#fff";
+  downloadBtn.style.cursor = "pointer";
+  downloadBtn.onclick = () => {
+    const a = document.createElement("a");
+    const url = URL.createObjectURL(audioBlob);
+    a.href = url;
+    a.download = "speaking.mp3";
+    a.click();
+  };
+
+  // === Giao diện chính ===
+  endScreen.innerHTML = `
+    <div style="background:rgba(255,255,255,0.85);
+                padding:20px;
+                border-radius:20px;
+                box-shadow:0 0 15px rgba(0,0,0,0.2);
+                width:90%;max-width:800px;
+                max-height:85vh; overflow-y:auto;
+                margin:0 auto; text-align:center;">
+      <h1 style="color:#fff; text-shadow:2px 2px 4px #000;
+                 margin-bottom:20px; font-size:1.5em;">
+        🎉 JUNI English, 113 Lê Trọng Tấn, Đà Nẵng - 0935.994359 🎉
+      </h1>
+      <h2 style="text-align:center;color:#0ea5e9;">
+        🔊 🎉Chúc mừng ${studentName} đã hoàn thành bài speaking
+      </h2>
+      <div id="reviewList" style="margin-top:20px;"></div>
+    </div>
+  `;
+
+  // ✅ Đặt hai nút ngay dưới tiêu đề
+  const title = endScreen.querySelector("h2");
+  title.parentNode.insertBefore(playAllBtn, title.nextSibling);
+  title.parentNode.insertBefore(downloadBtn, playAllBtn.nextSibling);
+
+  const listDiv = endScreen.querySelector("#reviewList");
+
+  // Danh sách ảnh + nút từng câu
+  speaking.forEach((line, index) => {
+    if (line.trim() === "") return;
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.justifyContent = "space-between";
+    row.style.alignItems = "center";
+    row.style.padding = "10px";
+    row.style.borderBottom = "1px solid #ddd";
+
+    const img = new Image();
+    img.src = `flashcard/${line}.jpg`;
+    img.onerror = () => { img.src = `flashcard/${line}.png`; };
+    img.style.width = "80px";
+    img.style.borderRadius = "10px";
+    img.style.objectFit = "contain";
+
+    const btn = document.createElement("button");
+    btn.textContent = "🔊 Nghe lại câu " + (index + 1);
+    btn.style.marginLeft = "10px";
+    btn.style.padding = "6px 12px";
+    btn.style.fontSize = "16px";
+    btn.style.border = "none";
+    btn.style.borderRadius = "8px";
+    btn.style.background = "linear-gradient(90deg,#a5f3fc,#38bdf8)";
+    btn.style.cursor = "pointer";
+    btn.onclick = () => playSentence(index);
+
+
+
+
+// 2. Tạo label riêng, nằm ngoài imgBox
+const label = document.createElement("div");
+label.textContent = line; // tên file
+label.style.textAlign = "left";  // căn trái
+label.style.fontSize = "18px";
+label.style.fontWeight = "bold";
+label.style.color = "#1e293b";
+label.style.marginLeft = "5px";  // cách ảnh 1 chút
+label.style.marginBottom = "5px";
+label.style.wordBreak = "break-word"; 
+label.style.maxWidth = "200px";  // giới hạn độ rộng chữ
+
+listDiv.appendChild(label);  // thêm chữ trên row
+
+
+// Bọc ảnh + nhãn vào một hộp dọc để căn giữa
+// 1. Tạo imgBox chỉ chứa ảnh
+const imgBox = document.createElement("div");
+imgBox.style.display = "flex";
+imgBox.style.flexDirection = "column";
+imgBox.style.alignItems = "center";
+imgBox.style.width = "100px"; // cố định chỉ ảnh
+imgBox.appendChild(img);
+
+
+// Thêm imgBoxvà nút vào row
+row.appendChild(imgBox);
+row.appendChild(btn);
+
+
+    listDiv.appendChild(row);
+
+  });
+}
+
+// === Giả lập phát lại từng câu (dùng toàn bộ file, không cắt đoạn thực) ===
+// Ở phiên bản nâng cao, có thể dùng SpeechRecognition hoặc WaveSurfer để chia đoạn.
+let currentAudio = null; // thêm biến toàn cục, đặt ở đầu script cũng được
+
+
+function playSentence(index) {
+  if (!audioBlob) {
+    alert("Bản ghi âm chưa được tạo. Vui lòng hoàn thành bài nói trước!");
+    return;
+  }
+
+  if (!sentenceTimes[index]) {
+    alert("Câu này chưa được ghi âm hoặc không tồn tại!");
+    return;
+  }
+
+  if (currentAudio) {
+  currentAudio.pause();
+  currentAudio.currentTime = 0;
+  currentAudio = null;
+}
+
+if (!audioURL) {
+  audioURL = URL.createObjectURL(audioBlob);
+}
+
+const newAudio = new Audio(audioURL);
+const start = sentenceTimes[index].start / 1000;
+const end = sentenceTimes[index].end / 1000;
+
+newAudio.addEventListener("loadedmetadata", () => {
+  newAudio.currentTime = start;
+  newAudio.play();
+
+  const duration = (end - start) * 1000;
+  setTimeout(() => {
+    newAudio.pause();
+    newAudio.currentTime = 0;
+  }, duration);
+});
+
+currentAudio = newAudio;
+}
+
+
+function finishAndSave() {
+  if (mediaRecorder && mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
+    mediaRecorder.onstop = () => {
+audioBlob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/mp4" });
+      saveRecording();
+      showEndScreen();
+    };
+  } else {
+    saveRecording();
+    showEndScreen();
+  }
+}
+
+// --- Màn hình chúc mừng ---
+function showEndScreen() {
+  endScreen.style.display = "none";
+  speakingArea.style.display = "block";
+  questionBox.textContent = `🎉 Chúc mừng ${studentName} 🎉 Nhớ nộp bài đã làm qua Zalo nhé🎉
+`;
+  controls.innerHTML = "";
+  launchBalloons();
+}
+
+// --- Hiệu ứng bóng bay ---
+const canvas = document.getElementById("balloonCanvas");
+const ctx = canvas.getContext("2d");
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+let balloons = [];
+function createBalloon() {
+  balloons.push({
+    x: Math.random() * canvas.width,
+    y: canvas.height + 50,
+    radius: 20 + Math.random() * 15,
+    color: `hsl(${Math.random() * 360}, 80%, 60%)`,
+    speed: 1 + Math.random() * 2
+  });
+}
+function animateBalloons() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  balloons.forEach((b, i) => {
+    b.y -= b.speed;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.radius, 0, 2 * Math.PI);
+    ctx.fillStyle = b.color;
+    ctx.fill();
+    ctx.strokeStyle = "#fff";
+    ctx.stroke();
+    if (b.y + b.radius < 0) balloons.splice(i, 1);
+  });
+  requestAnimationFrame(animateBalloons);
+}
+function launchBalloons() {
+  const interval = setInterval(() => { createBalloon(); }, 200);
+  setTimeout(() => clearInterval(interval), 3000);
+  animateBalloons();
+}
+</script>
+
+</body>
+</html>
